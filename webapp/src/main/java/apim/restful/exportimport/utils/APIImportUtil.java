@@ -42,7 +42,6 @@ import java.io.InputStream;
 import java.io.IOException;
 
 import java.util.Enumeration;
-import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
@@ -196,13 +195,6 @@ public final class APIImportUtil {
             bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
             API importedApi = gson.fromJson(bufferedReader, API.class);
             APIIdentifier apiIdentifier = importedApi.getId();
-
-            Set<Tier> tierSet=importedApi.getAvailableTiers();
-
-            for(Tier x:tierSet){
-                System.out.println("************** " + x.getName());
-            }
-
 
             //Creating API
             provider.addAPI(importedApi);
