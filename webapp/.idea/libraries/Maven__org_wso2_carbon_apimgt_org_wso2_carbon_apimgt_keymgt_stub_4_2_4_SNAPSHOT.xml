@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.wso2.carbon.apimgt:org.wso2.carbon.apimgt.keymgt.stub:4.2.4-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/wso2/carbon/apimgt/org.wso2.carbon.apimgt.keymgt.stub/4.2.4-SNAPSHOT/org.wso2.carbon.apimgt.keymgt.stub-4.2.4-20150510.215610-346.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/wso2/carbon/apimgt/org.wso2.carbon.apimgt.keymgt.stub/4.2.4-SNAPSHOT/org.wso2.carbon.apimgt.keymgt.stub-4.2.4-20150510.215610-346-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/wso2/carbon/apimgt/org.wso2.carbon.apimgt.keymgt.stub/4.2.4-SNAPSHOT/org.wso2.carbon.apimgt.keymgt.stub-4.2.4-20150510.215610-346-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

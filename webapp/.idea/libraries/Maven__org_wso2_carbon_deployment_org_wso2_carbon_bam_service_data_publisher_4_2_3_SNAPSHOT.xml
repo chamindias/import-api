@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.wso2.carbon.deployment:org.wso2.carbon.bam.service.data.publisher:4.2.3-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/wso2/carbon/deployment/org.wso2.carbon.bam.service.data.publisher/4.2.3-SNAPSHOT/org.wso2.carbon.bam.service.data.publisher-4.2.3-20150510.194158-447.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/wso2/carbon/deployment/org.wso2.carbon.bam.service.data.publisher/4.2.3-SNAPSHOT/org.wso2.carbon.bam.service.data.publisher-4.2.3-20150510.194158-447-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/wso2/carbon/deployment/org.wso2.carbon.bam.service.data.publisher/4.2.3-SNAPSHOT/org.wso2.carbon.bam.service.data.publisher-4.2.3-20150510.194158-447-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

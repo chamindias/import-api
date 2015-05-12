@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.wso2.carbon:org.wso2.carbon.identity.core:4.2.5-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/wso2/carbon/org.wso2.carbon.identity.core/4.2.5-SNAPSHOT/org.wso2.carbon.identity.core-4.2.5-20150510.212441-44.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/wso2/carbon/org.wso2.carbon.identity.core/4.2.5-SNAPSHOT/org.wso2.carbon.identity.core-4.2.5-20150510.212441-44-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/wso2/carbon/org.wso2.carbon.identity.core/4.2.5-SNAPSHOT/org.wso2.carbon.identity.core-4.2.5-20150510.212441-44-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
