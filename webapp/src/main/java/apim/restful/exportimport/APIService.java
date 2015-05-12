@@ -60,9 +60,6 @@ public class APIService {
                 String absolutePath = currentDirectory + createdFolders;
                 APIImportUtil.transferFile(uploadedInputStream, uploadFileName, absolutePath);
                 String extractedFolder = APIImportUtil.unzipArchive(new File(absolutePath + uploadFileName), new File(absolutePath));
-
-                //check tier availability ?????
-
                 APIImportUtil.importAPI(absolutePath + extractedFolder);
                 return Response.status(Status.CREATED).build();
             }
