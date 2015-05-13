@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -20,7 +20,9 @@ package apim.restful.exportimport.utils;
 
 import apim.restful.exportimport.APIImportConstants;
 import apim.restful.exportimport.APIService;
+
 import com.google.gson.Gson;
+
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -42,6 +44,7 @@ import java.io.InputStream;
 import java.io.IOException;
 
 import java.util.Enumeration;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
@@ -118,9 +121,13 @@ public final class APIImportUtil {
                 int index = 0;
                 while (zipEntries.hasMoreElements()) {
                     ZipEntry entry = (ZipEntry) zipEntries.nextElement();
+
                     if (entry.isDirectory()) {
-                        //This index variable is used to get the extracted folder name.
+
+                        //This index variable is used to get the extracted folder name; that is root directory
                         if (index == 0) {
+
+                            //Get the folder name without the '/' character at the end
                             extractedFolder = entry.getName().substring(0, entry.getName().length() - 1);
                         }
                         index = -1;
@@ -182,7 +189,7 @@ public final class APIImportUtil {
     /**
      * This method imports an API to the API store
      *
-     * @param pathToArchive location of the JSON file representing the API
+     * @param pathToArchive location of the extracted folder of the API
      */
     public static void importAPI(String pathToArchive) throws APIManagementException {
 
@@ -194,35 +201,95 @@ public final class APIImportUtil {
             inputStream = new FileInputStream(pathToArchive + APIImportConstants.JSON_FILE_LOCATION);
             bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
             API importedApi = gson.fromJson(bufferedReader, API.class);
-            APIIdentifier apiIdentifier = importedApi.getId();
+            Set<Tier> allowedTiers = provider.getTiers();
+            boolean isAllTiersAvailable = allowedTiers.containsAll(importedApi.getAvailableTiers());
 
-            //Creating API
-            provider.addAPI(importedApi);
+            //The API is only imported if all the tiers are available
+            if (isAllTiersAvailable) {
 
-            //Adding image icon to the API if there is any
-            File imageFolder = new File(pathToArchive + APIImportConstants.IMAGE_FILE_LOCATION);
+                //Creating API and adding resources
+                provider.addAPI(importedApi);
+                addAPIImage(pathToArchive, importedApi);
+                addAPIDocuments(pathToArchive, importedApi, gson);
+                addAPISequences(pathToArchive, importedApi);
+
+            } else {
+                log.error("Tiers of the new API is not supported.");
+                throw new APIManagementException("Tiers of the new API is not supported.");
+            }
+
+        } catch (FileNotFoundException e) {
+            log.error("Error in importing API.");
+            throw new APIManagementException("Error in importing API.", e);
+        } finally {
+            try {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+                if (bufferedReader != null) {
+                    bufferedReader.close();
+                }
+            } catch (IOException e) {
+                log.error("Error in closing streams.");
+            }
+        }
+    }
+
+    /**
+     * This method adds the icon to the API which is to be displayed at the API store.
+     *
+     * @param pathToArchive location of the extracted folder of the API
+     * @param importedApi the imported API object
+     * @throws APIManagementException by org.wso2.carbon.apimgt.api.APIManagementException
+     */
+    private static void addAPIImage(String pathToArchive, API importedApi) throws APIManagementException {
+
+        //Adding image icon to the API if there is any
+        File imageFolder = new File(pathToArchive + APIImportConstants.IMAGE_FILE_LOCATION);
+
+        try {
+
             if (imageFolder.isDirectory() && imageFolder.listFiles() != null && imageFolder.listFiles().length > 0) {
                 for (File imageFile : imageFolder.listFiles()) {
                     if (imageFile.getName().contains(APIImportConstants.IMAGE_FILE_NAME)) {
                         String fileExtension = FilenameUtils.getExtension(imageFile.getAbsolutePath());
-                        inputStream = new FileInputStream(imageFile.getAbsolutePath());
+                        FileInputStream inputStream = new FileInputStream(imageFile.getAbsolutePath());
                         Icon apiImage = new Icon(inputStream, fileExtension);
                         String imageRegistryLocation = provider.addIcon(imageFile.getAbsolutePath(), apiImage);
-                        importedApi.setThumbnailUrl(APIUtil.prependTenantPrefix
-                                (imageRegistryLocation, importedApi.getId().getProviderName()));
+                        importedApi.setThumbnailUrl(APIUtil.prependTenantPrefix(imageRegistryLocation,
+                                importedApi.getId().getProviderName()));
                         APIUtil.setResourcePermissions(importedApi.getId().getProviderName(), null, null,
                                 imageRegistryLocation);
                         provider.updateAPI(importedApi);
                     }
                 }
             }
+        } catch (FileNotFoundException e) {
+            log.error("Icon for API is not found");
+        } catch (FaultGatewaysException e) {
+            log.error("Failed to update API after adding icon");
+            throw new APIManagementException("Failed to update API after adding icon",e);
+        }
+    }
 
-            //Adding document(s) to the API if there are any
-            String docFileLocation = pathToArchive + APIImportConstants.DOCUMENT_FILE_LOCATION;
+    /**
+     *This method adds the documents to the imported API
+     *
+     * @param pathToArchive location of the extracted folder of the API
+     * @param importedApi the imported API object
+     * @param gson object related to the API data
+     * @throws APIManagementException by org.wso2.carbon.apimgt.api.APIManagementException
+     */
+    private static void addAPIDocuments(String pathToArchive, API importedApi, Gson gson) throws APIManagementException {
+        String docFileLocation = pathToArchive + APIImportConstants.DOCUMENT_FILE_LOCATION;
+        APIIdentifier apiIdentifier = importedApi.getId();
+
+        try {
             if (checkFileExistence(docFileLocation)) {
-                inputStream = new FileInputStream(docFileLocation);
-                bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+                FileInputStream inputStream = new FileInputStream(docFileLocation);
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 Documentation[] documentations = gson.fromJson(bufferedReader, Documentation[].class);
+
                 //For each type of document, separate actions are preformed
                 for (Documentation doc : documentations) {
                     if (doc.getSourceType().toString().equalsIgnoreCase(APIImportConstants.INLINE_DOC_TYPE)) {
@@ -247,45 +314,44 @@ public final class APIImportUtil {
                     }
                 }
             }
+        } catch (FileNotFoundException e) {
+            log.error("Failed to add Documentations to API.");
+        }
+    }
 
+    /**
+     *This method adds API sequences to the imported API
+     *
+     * @param pathToArchive location of the extracted folder of the API
+     * @param importedApi the imported API object
+     * @throws APIManagementException by org.wso2.carbon.apimgt.api.APIManagementException
+     */
+    private static void addAPISequences(String pathToArchive, API importedApi) throws APIManagementException {
+        String inSequenceFileLocation = pathToArchive + APIImportConstants.IN_SEQUENCE_LOCATION;
 
-            //Adding sequences into the API, if there are any
-            String inSequenceFileLocation = pathToArchive + APIImportConstants.IN_SEQUENCE_LOCATION;
+        try {
             //Adding in-sequence, if any
             if (checkFileExistence(inSequenceFileLocation)) {
                 importedApi.setInSequence(APIImportConstants.IN_SEQUENCE_NAME);
                 provider.updateAPI(importedApi);
             }
+
             //Adding out-sequence, if any
             String outSequenceFileLocation = pathToArchive + APIImportConstants.OUT_SEQUENCE_LOCATION;
             if (checkFileExistence(outSequenceFileLocation)) {
                 importedApi.setOutSequence(APIImportConstants.OUT_SEQUENCE_NAME);
                 provider.updateAPI(importedApi);
             }
+
             //Adding fault-sequence, if any
             String faultSequenceFileLocation = pathToArchive + APIImportConstants.FAULT_SEQUENCE_LOCATION;
             if (checkFileExistence(faultSequenceFileLocation)) {
                 importedApi.setFaultSequence(APIImportConstants.FAULT_SEQUENCE_NAME);
                 provider.updateAPI(importedApi);
             }
-
-        } catch (FileNotFoundException e) {
-            log.error("Error in importing API.");
-            throw new APIManagementException("Error in importing API.", e);
         } catch (FaultGatewaysException e) {
-            log.error("Gateway error in importing API.");
-            throw new APIManagementException("Gateway error in importing API.", e);
-        } finally {
-            try {
-                if (inputStream != null) {
-                    inputStream.close();
-                }
-                if (bufferedReader != null) {
-                    bufferedReader.close();
-                }
-            } catch (IOException e) {
-                log.error("Error in closing streams.");
-            }
+            log.error("Gateway fail while adding sequences.");
+            throw new APIManagementException("Gateway fail while adding sequences.",e);
         }
     }
 
@@ -299,8 +365,4 @@ public final class APIImportUtil {
         File testFile = new File(fileLocation);
         return testFile.exists();
     }
-
-    //Mapping??
-
-
 }
