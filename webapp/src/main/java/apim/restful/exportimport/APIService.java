@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (c) 2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@
 
 package apim.restful.exportimport;
 
-
 import com.sun.jersey.multipart.FormDataParam;
 import apim.restful.exportimport.utils.APIImportUtil;
 import org.wso2.carbon.apimgt.api.APIManagementException;
@@ -34,7 +33,8 @@ import java.io.File;
 import java.io.InputStream;
 
 /**
- * This class provides the service to import an API from an API archive.
+ * This class provides the service to import an API from an API archive. REST request should be sent with the
+ * archive file.
  */
 @Path("/")
 public class APIService {
@@ -49,21 +49,22 @@ public class APIService {
     @Produces(MediaType.APPLICATION_JSON)
     public Response importAPI(@FormDataParam("file") InputStream uploadedInputStream) {
 
-        try{
+        try {
             APIImportUtil.initializeProvider();
             String currentDirectory = System.getProperty("user.dir");
             String createdFolders = APIImportConstants.CREATED_FOLDER;
             File folderPath = new File(currentDirectory + createdFolders);
             boolean folderCreateStatus = folderPath.mkdirs();
+
             if (folderCreateStatus) {
                 String uploadFileName = APIImportConstants.UPLOAD_FILE_NAME;
                 String absolutePath = currentDirectory + createdFolders;
                 APIImportUtil.transferFile(uploadedInputStream, uploadFileName, absolutePath);
-                String extractedFolder = APIImportUtil.unzipArchive(new File(absolutePath + uploadFileName), new File(absolutePath));
-                APIImportUtil.importAPI(absolutePath + extractedFolder);
+                String extractedFolderName = APIImportUtil.unzipArchive(new File(absolutePath + uploadFileName),
+                                                new File(absolutePath));
+                APIImportUtil.importAPI(absolutePath + extractedFolderName);
                 return Response.status(Status.CREATED).build();
-            }
-            else {
+            } else {
                 return Response.status(Status.BAD_REQUEST).build();
             }
         } catch (APIManagementException e) {
@@ -71,4 +72,3 @@ public class APIService {
         }
     }
 }
-
